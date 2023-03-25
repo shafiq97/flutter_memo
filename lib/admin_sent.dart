@@ -1,60 +1,206 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:developer';
 
-class AdminSent extends StatelessWidget {
-  const AdminSent({super.key});
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:mobileapp/admin_received.dart';
+import 'package:mobileapp/create_memo.dart';
+import 'package:mobileapp/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class AdminSent extends StatefulWidget {
+  const AdminSent({Key? key}) : super(key: key);
+
+  @override
+  _AdminSentState createState() => _AdminSentState();
+}
+
+class _AdminSentState extends State<AdminSent> {
+  List<dynamic> _data = [];
+
+  Future<void> _fetchData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id');
+      print(userId.toString() + "huhu");
+      final response = await http.get(Uri.parse(
+          "http://192.168.68.105/memo_api/get_admin_sent.php?user_id=$userId"));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List<dynamic>;
+        setState(() {
+          _data = data;
+        });
+      } else {
+        throw Exception(response.body.toString());
+      }
+    } catch (error) {
+      print(error);
+      log('Error fetching data: $error');
+    }
+  }
+
+  Future<void> _sendText(String text, String memoId) async {
+    try {
+      final response = await http.put(
+        Uri.parse("http://192.168.68.105/memo_api/assign_to.php"),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: json.encode({
+          "text": text,
+          "memo_id": memoId,
+        }),
+      );
+      if (response.statusCode == 200) {
+        // Handle success response
+        log('got here 2');
+        final response2 = json.decode(response.body);
+        log(response2['message']);
+        response.body.toString();
+      } else {
+        log('got here 1');
+        throw Exception(response.body.toString());
+      }
+    } catch (error) {
+      log('got here 3');
+      log('Error sending data: $error');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DataTable(
-      columns: const <DataColumn>[
-        DataColumn(
-          label: Expanded(
-            child: Text(
-              'Memo Lists',
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SADA Staff'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.note_add_rounded),
+            onPressed: () {
+              // Navigate to the next page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CreateMemo()),
+              );
+            },
           ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: DataTable(
+          columns: const [
+            DataColumn(label: Text('Subject')),
+            DataColumn(label: Text('Sender')),
+            DataColumn(label: Text('Receiver')),
+            DataColumn(label: Text('Filename')),
+            DataColumn(label: Text('Assign to')),
+          ],
+          rows: _data.map((memo) {
+            return DataRow(
+              cells: [
+                DataCell(Text(memo['subject'].toString())),
+                DataCell(Text(memo['sender_name'].toString())),
+                DataCell(Text(memo['recipient_name'].toString())),
+                DataCell(Text(memo['image'].toString())),
+                DataCell(
+                  ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          String text = "";
+                          return AlertDialog(
+                            title: const Text("Assign to (Use Id)"),
+                            content: TextField(
+                              onChanged: (value) {
+                                text = value;
+                              },
+                            ),
+                            actions: [
+                              TextButton(
+                                child: const Text("CANCEL"),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("SEND"),
+                                onPressed: () {
+                                  _sendText(text, memo['id'].toString());
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: const Text('Assign'),
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
         ),
-        DataColumn(
-          label: Expanded(
-            child: Text(
-              'Notes',
-              style: TextStyle(fontStyle: FontStyle.italic),
+      ),
+      drawer: Drawer(
+        // Add a ListView to the drawer. This ensures the user can scroll
+        // through the options in the drawer if there isn't enough vertical
+        // space to fit everything.
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text('Drawer Header'),
             ),
-          ),
-        ),
-        DataColumn(
-          label: Expanded(
-            child: Text(
-              'Action',
-              style: TextStyle(fontStyle: FontStyle.italic),
+            ListTile(
+              title: const Text('Received'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AdminReceived()),
+                );
+              },
             ),
-          ),
-        ),
-      ],
-      rows: const <DataRow>[
-        DataRow(
-          cells: <DataCell>[
-            DataCell(Text('Sarah')),
-            DataCell(Text('19')),
-            DataCell(Text('Student')),
+            ListTile(
+              title: const Text('Sent'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminSent()),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
           ],
         ),
-        DataRow(
-          cells: <DataCell>[
-            DataCell(Text('Janine')),
-            DataCell(Text('43')),
-            DataCell(Text('Professor')),
-          ],
-        ),
-        DataRow(
-          cells: <DataCell>[
-            DataCell(Text('William')),
-            DataCell(Text('27')),
-            DataCell(Text('Associate Professor')),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }

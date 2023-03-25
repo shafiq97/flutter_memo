@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobileapp/login_page.dart';
 
-import 'admin_home_page.dart';
-
 class HodPage extends StatefulWidget {
   const HodPage({super.key});
 
@@ -26,13 +24,16 @@ class _HodPageState extends State<HodPage> {
   bool _isPending = true;
 
   // Update the status of the memo with the given memoId
-  Future<void> _updateStatus(String memoId) async {
+  Future<void> _updateStatus(String memoId, bool isApproved) async {
     try {
       // Define the API link and parameters
       const String url = 'http://192.168.68.105/memo_api/update_status.php';
-      final Map<String, dynamic> params = {'memo_id': memoId};
+      final Map<String, dynamic> params = {
+        'memo_id': memoId,
+        'is_approved': isApproved.toString()
+      };
 
-      // Send a PUT request to the API endpoint with the memo ID as a parameter
+      // Send a PUT request to the API endpoint with the memo ID and is_approved as parameters
       final response = await http.put(Uri.parse(url), body: params);
       if (response.statusCode == 200) {
         // If the response is successful, fetch the data again from the API endpoint
@@ -102,26 +103,29 @@ class _HodPageState extends State<HodPage> {
                         title: Text("Subject: ${_data[index]['subject']}"),
                         trailing:
                             Text("Sender: ${_data[index]['sender_name']}"),
-                        subtitle:
-                            Text("Receiver: ${_data[index]['recipient_name']}"),
+                        subtitle: Text(
+                            "Receiver: ${_data[index]['recipient_name']}\n Filename: ${_data[index]['image']}"),
                         onTap: () {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
                               title: const Text("Update Memo Status"),
                               content: const Text(
-                                  "Are you sure you want to approve the memo?"),
+                                  "Do you want to approve or decline this memo?"),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text("Cancel"),
+                                  onPressed: () {
+                                    _updateStatus(_data[index]['id'], false);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("Decline"),
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    _updateStatus(_data[index]['id']);
+                                    _updateStatus(_data[index]['id'], true);
                                     Navigator.pop(context);
                                   },
-                                  child: const Text("Confirm"),
+                                  child: const Text("Approve"),
                                 ),
                               ],
                             ),

@@ -19,6 +19,9 @@ class _RegPageState extends State<RegPage> {
   final _departmentController = TextEditingController();
   final _positionController = TextEditingController();
   final _telNoController = TextEditingController();
+  String _selectedItem = 'Pengurus Kanan/ Pengurus';
+  String _selectedWilayah = 'Wilayah Utara 1';
+  String _selectedDepartment = 'Jabatan Undang-undang';
 
   @override
   void dispose() {
@@ -100,27 +103,6 @@ class _RegPageState extends State<RegPage> {
                 height: 200.0,
                 width: 200.0,
               ),
-              // Container(
-              //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              //   margin: const EdgeInsets.only(top: 20.0),
-              //   child: TextFormField(
-              //     controller: _userIdController,
-              //     decoration: const InputDecoration(
-              //       enabledBorder: OutlineInputBorder(
-              //         borderRadius: BorderRadius.all(Radius.circular(30.0)),
-              //         borderSide: BorderSide(color: Colors.transparent),
-              //       ),
-              //       focusedBorder: OutlineInputBorder(
-              //         borderRadius: BorderRadius.all(Radius.circular(30.0)),
-              //         borderSide: BorderSide(color: Colors.blue),
-              //       ),
-              //       prefixIcon: Icon(Icons.person),
-              //       hintText: 'User ID',
-              //       fillColor: Colors.grey,
-              //       filled: true,
-              //     ),
-              //   ),
-              // ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 margin: const EdgeInsets.only(top: 10.0),
@@ -190,9 +172,8 @@ class _RegPageState extends State<RegPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 margin: const EdgeInsets.only(top: 10.0),
-                child: TextFormField(
-                  controller: _wilayahController,
-                  // obscureText: true,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedWilayah,
                   decoration: const InputDecoration(
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30.0)),
@@ -207,14 +188,32 @@ class _RegPageState extends State<RegPage> {
                     fillColor: Colors.grey,
                     filled: true,
                   ),
+                  items: <String>[
+                    'Wilayah Utara 1',
+                    'Wilayah Utara 2',
+                    'Wilayah Selatan',
+                    'Wilayah Tengah',
+                    'Wilayah Langkawi',
+                    'Wilayah Timur'
+                  ].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedWilayah = newValue!;
+                      _wilayahController.text = newValue;
+                    });
+                  },
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 margin: const EdgeInsets.only(top: 10.0),
-                child: TextFormField(
-                  controller: _departmentController,
-                  // obscureText: true,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDepartment,
                   decoration: const InputDecoration(
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30.0)),
@@ -224,19 +223,47 @@ class _RegPageState extends State<RegPage> {
                       borderRadius: BorderRadius.all(Radius.circular(30.0)),
                       borderSide: BorderSide(color: Colors.blue),
                     ),
-                    prefixIcon: Icon(Icons.co_present),
+                    prefixIcon: Icon(Icons.apartment),
                     hintText: 'Department',
                     fillColor: Colors.grey,
                     filled: true,
                   ),
+                  items: <String>[
+                    'Jabatan Undang-undang',
+                    'Jabatan Korporat',
+                    'Jabatan Pembangunan/R&D',
+                    'Jabatan Sumber Manusia',
+                    'Jabatan Hasil',
+                    'Jabatan Mekanikal/Elektrikal',
+                    'Jabatan Pengguna',
+                    'Jabatan Audit dalam, pengurusan & integriti',
+                    'Jabatan Kewangan',
+                    'Jabatan Ukur Bahan',
+                    'Jabatan Pengeluaran',
+                    'Jabatan Perumahan',
+                    'Jabatan Keselamatan',
+                    'Jabatan Teknologi Maklumat',
+                    'Jabatan Pengurusan Aset',
+                    'Jabatan Agihan/NRW'
+                  ].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedDepartment = newValue!;
+                      _departmentController.text = newValue;
+                    });
+                  },
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 margin: const EdgeInsets.only(top: 10.0),
-                child: TextFormField(
-                  controller: _positionController,
-                  // obscureText: true,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedItem,
                   decoration: const InputDecoration(
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30.0)),
@@ -251,6 +278,19 @@ class _RegPageState extends State<RegPage> {
                     fillColor: Colors.grey,
                     filled: true,
                   ),
+                  items: <String>['Pengurus Kanan/ Pengurus', 'Staff', 'Admin']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedItem = newValue!;
+                      _positionController.text = newValue;
+                    });
+                  },
                 ),
               ),
               Container(
@@ -293,7 +333,7 @@ class _RegPageState extends State<RegPage> {
                   ),
                 ),
                 onPressed: () async {
-                  dynamic? message = await registerUser(
+                  dynamic message = await registerUser(
                       _emailController.text,
                       _passwordController.text,
                       _confirmPasswordController.text,

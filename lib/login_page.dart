@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobileapp/admin_home_page.dart';
 import 'package:mobileapp/hod_page.dart';
 import 'package:mobileapp/reg_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -45,6 +46,10 @@ class _LoginPageState extends State<LoginPage> {
         // If the login is successful, navigate to the appropriate page
         final data = jsonDecode(response.body);
         final role = data['role'];
+        final userId = data['user_id'];
+        // Store the user ID in a session
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', userId);
         if (role == 'admin') {
           Navigator.pushReplacement(
             context,
@@ -154,7 +159,8 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const RegPage()),
                       );
                     },
                     child: const Text(
